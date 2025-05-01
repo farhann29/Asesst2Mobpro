@@ -68,6 +68,9 @@ class MainViewModel : ViewModel() {
             "2025-05-10",
             false,
             false
-        ),
+        )
     )
+    fun getPekerjaan(id: Long): Pekerjaan? {
+        return data.find { it.id == id }
+    }
 }
