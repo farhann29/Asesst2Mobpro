@@ -1,8 +1,9 @@
 package com.farhanfad0036.remindlist.ui.theme.screen
 
+import androidx.lifecycle.ViewModel
 import com.farhanfad0036.remindlist.model.Pekerjaan
 
-class MainViewModel {
+class MainViewModel : ViewModel() {
     val data = listOf(
         Pekerjaan(
             1,
@@ -61,7 +62,7 @@ class MainViewModel {
             false
         ),
         Pekerjaan(
-            8,
+            8   ,
             "Challenge 10 Mobpro",
             "melanjutkan tadi yang dikelas belum selesai",
             "2025-05-10",
