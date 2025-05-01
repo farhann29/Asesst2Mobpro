@@ -1,4 +1,4 @@
-package com.farhanfad0036.remindlist.ui.theme
+package com.farhanfad0036.remindlist.ui.theme.theme
 
 import androidx.compose.ui.graphics.Color
 
