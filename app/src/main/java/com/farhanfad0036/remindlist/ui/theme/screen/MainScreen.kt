@@ -2,9 +2,12 @@ package com.farhanfad0036.remindlist.ui.theme.screen
 
 import android.content.res.Configuration
 import android.graphics.pdf.models.ListItem
+import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +21,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,7 +59,7 @@ fun MainScreen() {
 fun ScreenContent(modifier: Modifier = Modifier){
     val viewModel: MainViewModel = viewModel()
     val data = viewModel.data
-//    val data = emptyList<Pekerjaan>()
+    val context = LocalContext.current
 
     if (data.isEmpty()) {
         Column (
@@ -71,7 +75,10 @@ fun ScreenContent(modifier: Modifier = Modifier){
             modifier = modifier.fillMaxSize()
         ){
             items(data) {
-                ListItem(pekerjaan = it)
+                ListItem(pekerjaan = it) {
+                    val pesan = context.getString(R.string.x_diklik, it.judul)
+                    Toast.makeText(context, pesan, Toast.LENGTH_SHORT).show()
+                }
                 HorizontalDivider()
             }
         }
@@ -79,8 +86,13 @@ fun ScreenContent(modifier: Modifier = Modifier){
 }
 
 @Composable
-fun ListItem(pekerjaan: Pekerjaan) {
-    Column {
+fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
+    Column (
+        modifier = Modifier.fillMaxWidth()
+            .clickable { onClick() }
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         Text(
             text = pekerjaan.judul,
             maxLines = 1,
