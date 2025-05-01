@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.farhanfad0036.remindlist.navigation.SetupNavGraph
 import com.farhanfad0036.remindlist.ui.theme.screen.MainScreen
 import com.farhanfad0036.remindlist.ui.theme.theme.RemindListTheme
 
@@ -19,7 +20,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             RemindListTheme {
-                MainScreen()
+                SetupNavGraph()
             }
         }
     }

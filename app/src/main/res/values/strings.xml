@@ -6,4 +6,6 @@
     <string name="judul">Judul</string>
     <string name="dekskripsi">Dekskripsi</string>
     <string name="tenggat">Tenggat</string>
+    <string name="kembali">Kembali</string>
+    <string name="simpan">Simpan</string>
 </resources>
