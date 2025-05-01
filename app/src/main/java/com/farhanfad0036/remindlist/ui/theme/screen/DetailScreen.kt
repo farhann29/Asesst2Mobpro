@@ -35,9 +35,11 @@ import androidx.navigation.compose.rememberNavController
 import com.farhanfad0036.remindlist.R
 import com.farhanfad0036.remindlist.ui.theme.theme.RemindListTheme
 
+const val KEY_ID_PEKERJAAN = "idPekerjaan"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(navController: NavHostController) {
+fun DetailScreen(navController: NavHostController, id: Long? = null) {
     var judul by remember { mutableStateOf("") }
     var deskripsi by remember { mutableStateOf("") }
 
@@ -54,7 +56,10 @@ fun DetailScreen(navController: NavHostController) {
                     }
                 },
                 title = {
-                    Text(text = stringResource(id = R.string.tambah_pekerjaan))
+                    if (id == null)
+                        Text(text = stringResource(id = R.string.tambah_pekerjaan))
+                    else
+                        Text(text = stringResource(id = R.string.edit))
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
