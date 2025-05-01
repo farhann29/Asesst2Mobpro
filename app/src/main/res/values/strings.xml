@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">RemindList</string>
+    <string name="list_kosong">Tidak ada pekerjaan</string>
 </resources>

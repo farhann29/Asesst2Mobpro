@@ -2,6 +2,7 @@ package com.farhanfad0036.remindlist.ui.theme.screen
 
 import android.content.res.Configuration
 import android.graphics.pdf.models.ListItem
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,11 +16,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.farhanfad0036.remindlist.R
 import com.farhanfad0036.remindlist.model.Pekerjaan
@@ -52,13 +55,25 @@ fun MainScreen() {
 fun ScreenContent(modifier: Modifier = Modifier){
     val viewModel: MainViewModel = viewModel()
     val data = viewModel.data
+//    val data = emptyList<Pekerjaan>()
 
-    LazyColumn (
-        modifier = modifier.fillMaxSize()
-    ){
-        items(data) {
-            ListItem(pekerjaan = it)
-            HorizontalDivider()
+    if (data.isEmpty()) {
+        Column (
+            modifier = modifier.fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = stringResource(id = R.string.list_kosong))
+        }
+    }
+    else {
+        LazyColumn (
+            modifier = modifier.fillMaxSize()
+        ){
+            items(data) {
+                ListItem(pekerjaan = it)
+                HorizontalDivider()
+            }
         }
     }
 }
