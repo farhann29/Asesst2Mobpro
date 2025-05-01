@@ -3,4 +3,7 @@
     <string name="list_kosong">Tidak ada pekerjaan</string>
     <string name="x_diklik">%1$s diklik!</string>
     <string name="tambah_pekerjaan">Tambah pekerjaan</string>
+    <string name="judul">Judul</string>
+    <string name="dekskripsi">Dekskripsi</string>
+    <string name="tenggat">Tenggat</string>
 </resources>
