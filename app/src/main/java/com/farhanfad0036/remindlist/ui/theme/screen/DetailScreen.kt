@@ -70,6 +70,7 @@ fun DetailScreen(navController: NavHostController, id: Long? = null) {
     var deskripsi by remember { mutableStateOf("") }
     var deadline by remember { mutableStateOf(0L) }
     var selesai by remember { mutableStateOf("Belum selesai") }
+    var showDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (id == null) return@LaunchedEffect
@@ -122,8 +123,7 @@ fun DetailScreen(navController: NavHostController, id: Long? = null) {
                     }
                     if (id != null ) {
                         DeleteAction {
-                            viewModel.delete(id)
-                            navController.popBackStack()
+                            showDialog = true
                         }
                     }
                 }
@@ -141,6 +141,14 @@ fun DetailScreen(navController: NavHostController, id: Long? = null) {
             onSelesaiChange = {selesai = it},
             modifier = Modifier.padding(padding)
         )
+        if (id != null && showDialog) {
+            DisplayAlertDialog(
+                onDismissRequest = {showDialog = false}) {
+                showDialog = false
+                viewModel.delete(id)
+                navController.popBackStack()
+            }
+        }
     }
 }
 

@@ -2,12 +2,10 @@ package com.farhanfad0036.remindlist.ui.theme.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.farhanfad0036.remindlist.database.PekerjaanDao
 import com.farhanfad0036.remindlist.model.Pekerjaan
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
 
 class DetailViewModel(private val dao: PekerjaanDao) : ViewModel() {
 
