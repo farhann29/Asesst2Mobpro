@@ -3,6 +3,7 @@ package com.farhanfad0036.remindlist.ui.theme.screen
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.farhanfad0036.remindlist.R
 import com.farhanfad0036.remindlist.ui.theme.theme.RemindListTheme
+import com.farhanfad0036.remindlist.util.ViewModelFactory
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -57,7 +59,9 @@ const val KEY_ID_PEKERJAAN = "idPekerjaan"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(navController: NavHostController, id: Long? = null) {
-    val viewModel: MainViewModel = viewModel()
+    val context = LocalContext.current
+    val factory = ViewModelFactory(context)
+    val viewModel: DetailViewModel = viewModel(factory = factory)
 
     var judul by remember { mutableStateOf("") }
     var deskripsi by remember { mutableStateOf("") }
@@ -96,7 +100,15 @@ fun DetailScreen(navController: NavHostController, id: Long? = null) {
                     titleContentColor = MaterialTheme.colorScheme.primary,
                 ),
                 actions = {
-                    IconButton(onClick = {navController.popBackStack()}) {
+                    IconButton(onClick = {
+                        if (judul == "" || deskripsi == "") {
+                            Toast.makeText(context, R.string.invalid, Toast.LENGTH_LONG).show()
+                            return@IconButton
+                        }
+                        if (id == null) {
+                            viewModel.insert(judul, deskripsi, deadline, selesai)
+                        }
+                        navController.popBackStack()}) {
                         Icon(
                             imageVector = Icons.Outlined.Check,
                             contentDescription = stringResource(R.string.simpan),
