@@ -17,4 +17,7 @@ interface PekerjaanDao {
 
     @Query("SELECT * FROM pekerjaan ORDER BY deadline ASC")
     fun getPekerjaan(): Flow<List<Pekerjaan>>
+
+    @Query("SELECT * FROM pekerjaan WHERE id = :id")
+    suspend fun getPekerjaanById(id: Long): Pekerjaan?
 }
