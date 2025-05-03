@@ -9,5 +9,7 @@
     <string name="kembali">Kembali</string>
     <string name="simpan">Simpan</string>
     <string name="edit">Edit</string>
-    <string name="invalid">Data tidak boleh kosong.</string>
+    <string name="invalid">Data tidak boleh kosong, harus diisi.</string>
+    <string name="lainnya">Opsi lainnya</string>
+    <string name="hapus">Hapus catatan</string>
 </resources>

@@ -20,4 +20,7 @@ interface PekerjaanDao {
 
     @Query("SELECT * FROM pekerjaan WHERE id = :id")
     suspend fun getPekerjaanById(id: Long): Pekerjaan?
+
+    @Query("DELETE FROM pekerjaan WHERE id =:id")
+    suspend fun deletedById(id: Long)
 }
