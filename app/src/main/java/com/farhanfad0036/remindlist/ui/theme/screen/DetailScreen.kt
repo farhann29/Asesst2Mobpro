@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -72,6 +73,7 @@ fun DetailScreen(navController: NavHostController, id: Long? = null) {
     var selesai by remember { mutableStateOf("Belum selesai") }
     var showDialog by remember { mutableStateOf(false) }
 
+
     LaunchedEffect(Unit) {
         if (id == null) return@LaunchedEffect
         val data = viewModel.getPekerjaan(id) ?: return@LaunchedEffect
@@ -100,12 +102,12 @@ fun DetailScreen(navController: NavHostController, id: Long? = null) {
                         Text(text = stringResource(id = R.string.edit))
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    containerColor = Color.Red,
+                    titleContentColor = Color.White,
                 ),
                 actions = {
                     IconButton(onClick = {
-                        if (judul == "" || deskripsi == "") {
+                        if (judul == "" || deskripsi == "" || deadline == 0L) {
                             Toast.makeText(context, R.string.invalid, Toast.LENGTH_LONG).show()
                             return@IconButton
                         }
@@ -139,7 +141,8 @@ fun DetailScreen(navController: NavHostController, id: Long? = null) {
             onDeadlineChange = {deadline = it},
             selesai = selesai,
             onSelesaiChange = {selesai = it},
-            modifier = Modifier.padding(padding)
+            modifier = Modifier.padding(padding),
+            isEditMode = id != null
         )
         if (id != null && showDialog) {
             DisplayAlertDialog(
@@ -185,9 +188,14 @@ fun FormPekerjaan(
     deskripsi: String, onDeskripsiChange: (String) -> Unit,
     deadline: Long, onDeadlineChange: (Long) -> Unit,
     selesai: String, onSelesaiChange: (String) -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
+    isEditMode: Boolean
 ) {
-    val listSelesai = listOf("Belum selesai", "Selesai")
+    val listSelesai = if (isEditMode) {
+        listOf("Belum selesai", "Selesai")
+    } else {
+        listOf("Belum selesai")
+    }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
@@ -199,6 +207,7 @@ fun FormPekerjaan(
 
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var tempDate by remember { mutableStateOf(0L) }
 
     Column (
         modifier = modifier.fillMaxSize().padding(16.dp),
@@ -226,7 +235,8 @@ fun FormPekerjaan(
                 .fillMaxWidth()
                 .height(120.dp)
         )
-        Button(onClick = { showDatePicker = true }, modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = { showDatePicker = true },
+            modifier = Modifier.fillMaxWidth()) {
             val label = if (deadline > 0L) {
                 SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
                     .format(Date(deadline))
@@ -241,28 +251,41 @@ fun FormPekerjaan(
                 context,
                 { _, y, m, d ->
                     calendar.set(y, m, d)
+                    calendar.set(Calendar.HOUR_OF_DAY, 0)
+                    calendar.set(Calendar.MINUTE, 0)
+                    calendar.set(Calendar.SECOND, 0)
+                    calendar.set(Calendar.MILLISECOND, 0)
+                    tempDate = calendar.timeInMillis
                     showDatePicker = false
                     showTimePicker = true
                 },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH),
-            ).show()
+                year,
+                month,
+                day
+            ).apply {
+                datePicker.minDate = System.currentTimeMillis() - 1000
+            }.show()
         }
 
         if (showTimePicker) {
             TimePickerDialog(
                 context,
                 { _, h, min ->
+                    calendar.timeInMillis = tempDate
                     calendar.set(Calendar.HOUR_OF_DAY, h)
                     calendar.set(Calendar.MINUTE, min)
+
+                    val selectedTime = calendar.timeInMillis
+                    if (selectedTime < System.currentTimeMillis()) {
+                        Toast.makeText(context, "Tidak bisa memilih waktu yang sudah lewat", Toast.LENGTH_SHORT).show()
+                        showTimePicker = false
+                        return@TimePickerDialog
+                    }
+                    onDeadlineChange(selectedTime)
                     showTimePicker = false
-                    onDeadlineChange(calendar.timeInMillis)
 
                 },
-                calendar.get(Calendar.HOUR_OF_DAY),
-                calendar.get(Calendar.MINUTE),
-                true
+                hour, minute, true
             ).show()
         }
         Column (
@@ -277,13 +300,13 @@ fun FormPekerjaan(
                     modifier = Modifier
                         .selectable(
                             selected = (item == selesai),
-                            onClick ={onSelesaiChange(item)}
+                            onClick ={ onSelesaiChange(item) }
                         )
                         .padding(vertical = 4.dp)
                 ) {
                     RadioButton(
                         selected = (item == selesai),
-                        onClick = {onSelesaiChange(item)}
+                        onClick = {onSelesaiChange(item) }
                     )
                     Text(
                         text = item,
