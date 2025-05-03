@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,6 +36,9 @@ import androidx.navigation.compose.rememberNavController
 import com.farhanfad0036.remindlist.R
 import com.farhanfad0036.remindlist.model.Pekerjaan
 import com.farhanfad0036.remindlist.navigation.Screen
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,7 +108,8 @@ fun ScreenContent(modifier: Modifier = Modifier, navController: NavHostControlle
 @Composable
 fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
     Column (
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .clickable { onClick() }
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -118,8 +123,12 @@ fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
             text = pekerjaan.deskripsi,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis)
-        Text(text = pekerjaan.deadline)
-        Text(text = if (pekerjaan.selesai) "Selesai" else "Belum selesai")
+        val deadlineFormatted = remember(pekerjaan.deadline) {
+            SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date(pekerjaan.deadline))
+        }
+        Text(text = deadlineFormatted)
+
+        Text(text = pekerjaan.selesai)
     }
 }
 
