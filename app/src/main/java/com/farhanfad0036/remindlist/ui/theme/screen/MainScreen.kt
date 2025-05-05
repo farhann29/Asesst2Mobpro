@@ -1,25 +1,33 @@
 package com.farhanfad0036.remindlist.ui.theme.screen
 
 import android.content.res.Configuration
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.HourglassEmpty
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -96,12 +104,19 @@ fun MainScreen(navController: NavHostController) {
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
+                        val filterOptions = listOf(
+                            FilterType.SEMUA,
+                            FilterType.DEADLINE_TERDEKAT,
+                            FilterType.TERLAMBAT,
+                            FilterType.BELUM_SELESAI,
+                            FilterType.SELESAI
+                        )
 
                         DropdownMenu(
                             expanded = expanded,
                             onDismissRequest = {expanded = false}
                         ) {
-                            FilterType.values().forEach { type ->
+                            filterOptions.forEach { type ->
                                 DropdownMenuItem(
                                     text = { Text(type.toDisplayString()) },
                                     onClick = {
@@ -214,10 +229,24 @@ fun ScreenContent(
     }
 }
 
-
 @Composable
 fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
-    Column (
+    val now = System.currentTimeMillis()
+    val isDone = pekerjaan.selesai == "Selesai"
+    val isOverdue = !isDone && pekerjaan.deadline < now
+
+    val deadlineFormatted = remember(pekerjaan.deadline) {
+        SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+            .format(Date(pekerjaan.deadline))
+    }
+
+    val (statusIcon, statusColor, statusText) = when {
+        isDone -> Triple(Icons.Filled.CheckCircle, Color(0xFF4CAF50), "Selesai")
+        isOverdue -> Triple(Icons.Filled.Warning, MaterialTheme.colorScheme.error, "Terlambat")
+        else -> Triple(Icons.Filled.Schedule, Color(0xFFFF9800), "Belum selesai")
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
@@ -228,53 +257,126 @@ fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
             text = pekerjaan.judul,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            fontWeight = FontWeight.Bold)
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleMedium
+        )
+
         Text(
             text = pekerjaan.deskripsi,
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis)
-        val deadlineFormatted = remember(pekerjaan.deadline) {
-            SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date(pekerjaan.deadline))
-        }
-        Text(text = deadlineFormatted)
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium
+        )
 
-        Text(text = pekerjaan.selesai)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.CalendarToday,
+                contentDescription = "Deadline",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = deadlineFormatted,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = statusIcon,
+                contentDescription = statusText,
+                tint = statusColor,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = statusText,
+                color = statusColor,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
+            )
+        }
     }
 }
 
 @Composable
 fun GridItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
+    val now = System.currentTimeMillis()
+    val isDone = pekerjaan.selesai == "Selesai"
+    val isOverdue = !isDone && pekerjaan.deadline < now
+
+    val deadlineFormatted = remember(pekerjaan.deadline) {
+        SimpleDateFormat("dd MMM", Locale.getDefault())
+            .format(Date(pekerjaan.deadline))
+    }
+
+    val (statusIcon, statusColor, statusText) = when {
+        isDone -> Triple(Icons.Filled.CheckCircle, Color(0xFF4CAF50), "Selesai")
+        isOverdue -> Triple(Icons.Filled.Warning, MaterialTheme.colorScheme.error, "Terlambat")
+        else -> Triple(Icons.Filled.Schedule, Color(0xFFFF9800), "Belum selesai")
+    }
+
     Card(
-        modifier = Modifier.fillMaxWidth().clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        border = BorderStroke(1.dp, DividerDefaults.color)
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth()
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        Column (
-            modifier = Modifier.padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
                 text = pekerjaan.judul,
-                maxLines = 2,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleSmall
             )
+
             Text(
                 text = pekerjaan.deskripsi,
-                maxLines = 4,
-                overflow = TextOverflow.Ellipsis
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall
             )
-            val deadlineFormatted = remember(pekerjaan.deadline) {
-                SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()).format(Date(pekerjaan.deadline))
-            }
-            Text(text = deadlineFormatted)
 
-            Text(text = pekerjaan.selesai)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.CalendarToday,
+                    contentDescription = "Deadline",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = deadlineFormatted,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = statusIcon,
+                    contentDescription = statusText,
+                    tint = statusColor,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = statusText,
+                    color = statusColor,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
+                )
+            }
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)

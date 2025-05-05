@@ -5,12 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.farhanfad0036.remindlist.database.PekerjaanDao
 import com.farhanfad0036.remindlist.model.Pekerjaan
 import com.farhanfad0036.remindlist.util.SettingsDataStore
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -19,7 +17,8 @@ enum class FilterType {
     SEMUA,
     SELESAI,
     BELUM_SELESAI,
-    DEADLINE_TERDEKAT
+    DEADLINE_TERDEKAT,
+    TERLAMBAT
 }
 
 
@@ -53,8 +52,10 @@ class MainViewModel(private val dao: PekerjaanDao, private val dataStore: Settin
             FilterType.SELESAI -> allPekerjaan.filter { it.selesai == "Selesai" }
             FilterType.BELUM_SELESAI -> allPekerjaan.filter { it.selesai == "Belum selesai" }
             FilterType.DEADLINE_TERDEKAT -> allPekerjaan
-                .filter { it.selesai == "Belum selesai" }
+                .filter { it.selesai == "Belum selesai"}
+                .filter { it.deadline > System.currentTimeMillis() }
                 .sortedBy { it.deadline }
+            FilterType.TERLAMBAT -> allPekerjaan.filter { it.selesai == "Belum selesai" && it.deadline < System.currentTimeMillis() }
         }
     }.stateIn(
         scope = viewModelScope,
@@ -66,8 +67,9 @@ class MainViewModel(private val dao: PekerjaanDao, private val dataStore: Settin
 fun FilterType.toDisplayString(): String {
     return when (this) {
         FilterType.SEMUA -> "Semua"
-        FilterType.SELESAI -> "Selesai"
         FilterType.BELUM_SELESAI -> "Belum selesai"
         FilterType.DEADLINE_TERDEKAT -> "Deadline terdekat (Belum selesai)"
+        FilterType.TERLAMBAT -> "Terlambat"
+        FilterType.SELESAI -> "Selesai"
     }
 }
