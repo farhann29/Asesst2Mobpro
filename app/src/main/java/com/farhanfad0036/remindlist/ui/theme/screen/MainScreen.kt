@@ -23,7 +23,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -307,7 +306,7 @@ fun GridItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
     val isOverdue = !isDone && pekerjaan.deadline < now
 
     val deadlineFormatted = remember(pekerjaan.deadline) {
-        SimpleDateFormat("dd MMM", Locale.getDefault())
+        SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
             .format(Date(pekerjaan.deadline))
     }
 
