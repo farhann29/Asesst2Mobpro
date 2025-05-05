@@ -8,17 +8,22 @@ import com.farhanfad0036.remindlist.ui.theme.screen.DetailViewModel
 import com.farhanfad0036.remindlist.ui.theme.screen.MainViewModel
 
 class ViewModelFactory (
-    private val context: Context
+    private val context: Context,
+    private val dataStore: SettingsDataStore? = null
 ) : ViewModelProvider.Factory {
     @Suppress("unchecked_cast")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         val dao = PekerjaanDb.getInstance(context).dao
-        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            return MainViewModel(dao) as T
-        } else if (modelClass.isAssignableFrom(DetailViewModel::class.java)) {
-            return DetailViewModel(dao) as T
+        return when {
+            modelClass.isAssignableFrom(MainViewModel::class.java) -> {
+                if (dataStore == null) throw IllegalArgumentException("DataStore is required for MainViewModel")
+                MainViewModel(dao, dataStore) as T
+            }
+            modelClass.isAssignableFrom(DetailViewModel::class.java) -> {
+                DetailViewModel(dao) as T
+            }
+            else -> throw IllegalArgumentException("Unknown ViewModel class")
         }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 

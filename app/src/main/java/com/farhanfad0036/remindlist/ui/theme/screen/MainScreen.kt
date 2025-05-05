@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DividerDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -32,7 +35,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,8 +67,13 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController) {
-    val dataStore = SettingsDataStore(LocalContext.current)
+    val context = LocalContext.current
+    val dataStore = SettingsDataStore(context)
+    val factory = ViewModelFactory(context, dataStore)
+    val viewModel: MainViewModel = viewModel(factory = factory)
+
     val showList by dataStore.layoutFlow.collectAsState(true)
+    val filter by viewModel.filter.collectAsState()
 
     Scaffold(
         topBar = {
@@ -76,6 +86,32 @@ fun MainScreen(navController: NavHostController) {
                     titleContentColor = Color.White
                 ),
                 actions = {
+                    var expanded by remember { mutableStateOf(false) }
+
+                    Box{
+                        IconButton(onClick = {expanded = true}) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.baseline_filter_list_alt_24),
+                                contentDescription = "Filter",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = {expanded = false}
+                        ) {
+                            FilterType.values().forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type.toDisplayString()) },
+                                    onClick = {
+                                        viewModel.setFilter(type)
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                     IconButton(onClick = {
                         CoroutineScope(Dispatchers.IO).launch {
                             dataStore.saveLayout(!showList)
@@ -110,58 +146,74 @@ fun MainScreen(navController: NavHostController) {
             }
         }
     ) { innerPadding ->
-        ScreenContent(showList, Modifier.padding(innerPadding), navController)
+        ScreenContent(
+            showList = showList,
+            modifier = Modifier.padding(innerPadding),
+            navController = navController,
+            viewModel = viewModel)
 
     }
 }
 
 @Composable
-fun ScreenContent(showList: Boolean, modifier: Modifier = Modifier, navController: NavHostController){
-    val context = LocalContext.current
-    val factory = ViewModelFactory(context)
-    val viewModel: MainViewModel = viewModel(factory = factory)
-    val data by viewModel.data.collectAsState()
+fun ScreenContent(
+    showList: Boolean,
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+    viewModel: MainViewModel
+) {
+    val data by viewModel.filteredData.collectAsState()
+    val filter by viewModel.filter.collectAsState()
 
-    if (data.isEmpty()) {
-        Column (
-            modifier = modifier.fillMaxSize().padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(text = stringResource(id = R.string.list_kosong))
-        }
-    }
-    else {
-        if (showList) {
-            LazyColumn (
-                modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 84.dp)
-            ){
-                items(data) {
-                    ListItem(pekerjaan = it) {
-                        navController.navigate(Screen.FormUbah.withId(it.id))
-                    }
-                    HorizontalDivider()
-                }
-            }
-        }
-        else {
-            LazyVerticalStaggeredGrid(
-                modifier = modifier.fillMaxSize(),
-                columns = StaggeredGridCells.Fixed(2),
-                verticalItemSpacing = 8.dp,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 84.dp)
+    Column(modifier = modifier.fillMaxSize()) {
+        Text(
+            text = "Filter: ${filter.toDisplayString()}",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        if (data.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                items(data) {
-                    GridItem(pekerjaan = it) {
-                        navController.navigate(Screen.FormUbah.withId(it.id))
+                Text(text = stringResource(id = R.string.list_kosong))
+            }
+        } else {
+            if (showList) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 84.dp)
+                ) {
+                    items(data) {
+                        ListItem(pekerjaan = it) {
+                            navController.navigate(Screen.FormUbah.withId(it.id))
+                        }
+                        HorizontalDivider()
+                    }
+                }
+            } else {
+                LazyVerticalStaggeredGrid(
+                    modifier = Modifier.fillMaxSize(),
+                    columns = StaggeredGridCells.Fixed(2),
+                    verticalItemSpacing = 8.dp,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 84.dp)
+                ) {
+                    items(data) {
+                        GridItem(pekerjaan = it) {
+                            navController.navigate(Screen.FormUbah.withId(it.id))
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
