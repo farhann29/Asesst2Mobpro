@@ -14,15 +14,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
@@ -143,6 +144,15 @@ fun MainScreen(navController: NavHostController) {
                             tint = MaterialTheme.colorScheme.primary
                         )
                     }
+                    IconButton(onClick = {
+                        navController.navigate(Screen.RecycleBin.route)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Recycle Bin",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             )
         },
@@ -177,7 +187,10 @@ fun ScreenContent(
     viewModel: MainViewModel
 ) {
     val data by viewModel.filteredData.collectAsState()
+    val deletedData by viewModel.deletedData.collectAsState()
     val filter by viewModel.filter.collectAsState()
+
+    val tampilkanData = data
 
     Column(modifier = modifier.fillMaxSize()) {
         Text(
@@ -189,7 +202,7 @@ fun ScreenContent(
             color = MaterialTheme.colorScheme.primary
         )
 
-        if (data.isEmpty()) {
+        if (tampilkanData.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -202,25 +215,26 @@ fun ScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(bottom = 84.dp)
                 ) {
-                    items(data) {
-                        ListItem(pekerjaan = it) {
-                            navController.navigate(Screen.FormUbah.withId(it.id))
-                        }
+                    items(data) { pekerjaan ->
+                        ListItem(
+                            pekerjaan = pekerjaan,
+                            onClick = {navController.navigate(Screen.FormUbah.withId(pekerjaan.id)) },
+                            onDelete = {viewModel.softDelete(pekerjaan.id)}
+                        )
                         HorizontalDivider()
                     }
                 }
             } else {
-                LazyVerticalStaggeredGrid(
-                    modifier = Modifier.fillMaxSize(),
-                    columns = StaggeredGridCells.Fixed(2),
-                    verticalItemSpacing = 8.dp,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(8.dp, 8.dp, 8.dp, 84.dp)
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(8.dp)
                 ) {
-                    items(data) {
-                        GridItem(pekerjaan = it) {
-                            navController.navigate(Screen.FormUbah.withId(it.id))
-                        }
+                    items(data) { pekerjaan ->
+                        GridItem(
+                            pekerjaan = pekerjaan,
+                            onClick = {navController.navigate(Screen.FormUbah.withId(pekerjaan.id)) },
+                            onDelete = {viewModel.softDelete(pekerjaan.id)}
+                        )
                     }
                 }
             }
@@ -229,7 +243,7 @@ fun ScreenContent(
 }
 
 @Composable
-fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
+fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit, onDelete: () -> Unit) {
     val now = System.currentTimeMillis()
     val isDone = pekerjaan.selesai == "Selesai"
     val isOverdue = !isDone && pekerjaan.deadline < now
@@ -245,102 +259,28 @@ fun ListItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
         else -> Triple(Icons.Filled.Schedule, Color(0xFFFF9800), "Belum selesai")
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = pekerjaan.judul,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Text(
-            text = pekerjaan.deskripsi,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Filled.CalendarToday,
-                contentDescription = "Deadline",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(Modifier.width(4.dp))
-            Text(
-                text = deadlineFormatted,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = statusIcon,
-                contentDescription = statusText,
-                tint = statusColor,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(Modifier.width(4.dp))
-            Text(
-                text = statusText,
-                color = statusColor,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
-            )
-        }
-    }
-}
-
-@Composable
-fun GridItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
-    val now = System.currentTimeMillis()
-    val isDone = pekerjaan.selesai == "Selesai"
-    val isOverdue = !isDone && pekerjaan.deadline < now
-
-    val deadlineFormatted = remember(pekerjaan.deadline) {
-        SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
-            .format(Date(pekerjaan.deadline))
-    }
-
-    val (statusIcon, statusColor, statusText) = when {
-        isDone -> Triple(Icons.Filled.CheckCircle, Color(0xFF4CAF50), "Selesai")
-        isOverdue -> Triple(Icons.Filled.Warning, MaterialTheme.colorScheme.error, "Terlambat")
-        else -> Triple(Icons.Filled.Schedule, Color(0xFFFF9800), "Belum selesai")
-    }
-
-    Card(
-        modifier = Modifier
-            .padding(8.dp)
-            .fillMaxWidth()
-            .clickable { onClick() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = pekerjaan.judul,
-                fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleSmall
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium
             )
 
             Text(
                 text = pekerjaan.deskripsi,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodyMedium
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -353,7 +293,7 @@ fun GridItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
                 Spacer(Modifier.width(4.dp))
                 Text(
                     text = deadlineFormatted,
-                    style = MaterialTheme.typography.labelSmall
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
@@ -368,19 +308,97 @@ fun GridItem(pekerjaan: Pekerjaan, onClick: () -> Unit) {
                 Text(
                     text = statusText,
                     color = statusColor,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.bodySmall,
                     fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
                 )
             }
         }
     }
 }
+    @Composable
+    fun GridItem(pekerjaan: Pekerjaan, onClick: () -> Unit, onDelete: () -> Unit) {
+        val now = System.currentTimeMillis()
+        val isDone = pekerjaan.selesai == "Selesai"
+        val isOverdue = !isDone && pekerjaan.deadline < now
+
+        val deadlineFormatted = remember(pekerjaan.deadline) {
+            SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault())
+                .format(Date(pekerjaan.deadline))
+        }
+
+        val (statusIcon, statusColor, statusText) = when {
+            isDone -> Triple(Icons.Filled.CheckCircle, Color(0xFF4CAF50), "Selesai")
+            isOverdue -> Triple(Icons.Filled.Warning, MaterialTheme.colorScheme.error, "Terlambat")
+            else -> Triple(Icons.Filled.Schedule, Color(0xFFFF9800), "Belum selesai")
+        }
+
+        Card(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
+                .clickable { onClick() },
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Box(modifier = Modifier.padding(12.dp)) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = pekerjaan.judul,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+
+                    Text(
+                        text = pekerjaan.deskripsi,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.CalendarToday,
+                            contentDescription = "Deadline",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = deadlineFormatted,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = statusIcon,
+                            contentDescription = statusText,
+                            tint = statusColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            text = statusText,
+                            color = statusColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (isOverdue) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+                }
+            }
+        }
+    }
 
 
-@Preview(showBackground = true)
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
-@Composable
-fun MainScreenPreview() {
-        MainScreen(rememberNavController())
+    @Preview(showBackground = true)
+    @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+    @Composable
+    fun MainScreenPreview() {
+        MainScreen(navController = rememberNavController())
+    }
 
-}

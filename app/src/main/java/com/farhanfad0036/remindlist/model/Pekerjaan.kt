@@ -11,4 +11,5 @@ data class Pekerjaan(
     val deskripsi: String,
     val deadline: Long = 0L,
     val selesai: String,
+    val isDeleted: Boolean = false
 )

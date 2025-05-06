@@ -27,7 +27,7 @@ class SettingsDataStore(private val context: Context) {
     }
     val filterFlow: Flow<FilterType> = context.dataStore.data.map { preferences ->
         val filterName = preferences[FILTER_KEY] ?: FilterType.SEMUA.name
-        FilterType.valueOf(filterName)
+        runCatching { FilterType.valueOf(filterName) }.getOrDefault(FilterType.SEMUA)
     }
 
     suspend fun saveLayout(isList: Boolean) {

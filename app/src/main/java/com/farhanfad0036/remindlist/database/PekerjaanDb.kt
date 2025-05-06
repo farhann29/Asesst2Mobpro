@@ -5,8 +5,11 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.farhanfad0036.remindlist.model.Pekerjaan
+import androidx.room.TypeConverters
 
-@Database(entities = [Pekerjaan::class], version = 1, exportSchema = false)
+
+@Database(entities = [Pekerjaan::class], version = 2, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class PekerjaanDb : RoomDatabase() {
     abstract val dao: PekerjaanDao
 

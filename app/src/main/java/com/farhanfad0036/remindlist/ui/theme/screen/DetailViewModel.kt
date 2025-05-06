@@ -1,5 +1,6 @@
 package com.farhanfad0036.remindlist.ui.theme.screen
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.farhanfad0036.remindlist.database.PekerjaanDao
@@ -36,9 +37,10 @@ class DetailViewModel(private val dao: PekerjaanDao) : ViewModel() {
             dao.update(pekerjaan)
         }
     }
-    fun delete(id: Long) {
+    fun softDelete(id: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.deletedById(id)
+            Log.d("DetailViewModel", "Soft delete ID: $id")
+            dao.softDelete(id)
         }
     }
 }
