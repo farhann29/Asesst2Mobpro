@@ -2,7 +2,6 @@ package com.farhanfad0036.remindlist.ui.theme.screen
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.farhanfad0036.remindlist.database.PekerjaanDao
 import com.farhanfad0036.remindlist.model.Pekerjaan
 import com.farhanfad0036.remindlist.util.SettingsDataStore
@@ -10,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
